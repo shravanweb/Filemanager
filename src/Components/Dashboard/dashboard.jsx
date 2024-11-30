@@ -7,10 +7,10 @@ import {
     Menu,
     MenuItem,
     Card,
-    CardMedia,
     CardContent,
     Avatar,
     Paper,
+    CardMedia,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -42,10 +42,27 @@ const Dashboard = ({ onLogout }) => {
                 return <PictureAsPdfIcon color="error" />;
             case 'excel':
                 return <TableChartIcon color="success" />;
+            case 'word':
+                return <DescriptionIcon color="primary" />;
             case 'image':
                 return <ImageIcon color="primary" />;
             default:
                 return <DescriptionIcon />;
+        }
+    };
+
+    const getThumbnail = (type, url) => {
+        switch (type) {
+            case 'pdf':
+                return '/pdf-thumbnail.png';  // Placeholder for PDF thumbnails
+            case 'excel':
+                return '/excel-thumbnail.png';  // Placeholder for Excel thumbnails
+            case 'word':
+                return '/word-thumbnail.png';  // Placeholder for Word thumbnails
+            case 'image':
+                return url;  // For image files, show the image itself
+            default:
+                return '/file-thumbnail.png';  // Default thumbnail for other file types
         }
     };
 
@@ -206,16 +223,19 @@ const Dashboard = ({ onLogout }) => {
                                     <CardMedia
                                         component="img"
                                         height="140"
-                                        image={file.type === 'image' ? file.url : '/placeholder.png'}
+                                        image={getThumbnail(file.type, file.url)}
                                         alt={file.name}
                                     />
                                     <CardContent>
-                                        <Box display="flex" alignItems="center">
+                                        <Box display="flex" alignItems="center" mb={1}>
                                             <Avatar>{getFileIcon(file.type)}</Avatar>
                                             <Typography variant="body2" noWrap ml={2}>
                                                 {file.name}
                                             </Typography>
-                                            <Typography variant="caption" color="textSecondary" ml={2}>
+                                        </Box>
+
+                                        <Box display="flex" alignItems="center" justifyContent="space-between" mt={1}>
+                                            <Typography variant="caption" color="textSecondary">
                                                 {file.postedDate}
                                             </Typography>
                                             <IconButton onClick={() => handleDownload(file)} sx={{ ml: 2 }}>
@@ -229,7 +249,7 @@ const Dashboard = ({ onLogout }) => {
                 </Grid>
 
                 <Dialog open={dialogOpen} onClose={handleDialogClose} fullWidth maxWidth="xs">
-                    <DialogTitle sx={{ backgroundColor: "#244391", color: "#FFF" }}>Create New Folder</DialogTitle>
+                    <DialogTitle>Create New Folder</DialogTitle>
                     <Divider />
                     <DialogContent>
                         <TextField
@@ -245,7 +265,7 @@ const Dashboard = ({ onLogout }) => {
                         <Button onClick={handleDialogClose} variant="outlined" color="black">
                             Cancel
                         </Button>
-                        <Button onClick={handleFolderCreate} variant="contained" color="primary" sx={{ backgroundColor: "#d32f2f", color: "#FFF" }}>
+                        <Button onClick={handleFolderCreate} variant="contained" color="primary" sx={{ backgroundColor: "#d32f2f" }}>
                             Create
                         </Button>
                     </DialogActions>
