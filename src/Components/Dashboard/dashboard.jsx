@@ -14,14 +14,14 @@ import {
     Divider,
     Breadcrumbs,
     Link,
-    Paper,
     Menu,
     MenuItem,
 } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import AddIcon from '@mui/icons-material/Add';
 import FileUploadIcon from '@mui/icons-material/UploadFile';
-import FileDownloadIcon from '@mui/icons-material/Download'; 
+import FileDownloadIcon from '@mui/icons-material/Download';
+import { useDropzone } from 'react-dropzone';  // Importing react-dropzone for drag and drop functionality
 import Sidebar from '../Sidebar/sidebar';
 import moment from 'moment';
 
@@ -79,9 +79,9 @@ const Dashboard = ({ onLogout }) => {
         return { currentFolders, currentFiles };
     };
 
-    // File upload
-    const handleFileUpload = (event) => {
-        const uploadedFiles = Array.from(event.target.files).map((file) => ({
+    // File upload through drag and drop
+    const onDrop = (acceptedFiles) => {
+        const uploadedFiles = acceptedFiles.map((file) => ({
             id: Date.now() + Math.random(),
             name: file.name,
             type: file.type,
@@ -90,8 +90,14 @@ const Dashboard = ({ onLogout }) => {
             uploadTime: new Date().toISOString(), // Ensure upload time is always set
         }));
         setFiles((prevFiles) => [...prevFiles, ...uploadedFiles]);
-        handleMenuClose();
     };
+
+    // Setup dropzone for drag and drop functionality
+    const { getRootProps, getInputProps } = useDropzone({
+        onDrop,
+        multiple: true,
+        accept: 'image/*, .pdf, .docx, .txt, .xlsx', // Accept files types
+    });
 
     const { currentFolders, currentFiles } = getCurrentFolderContents();
 
@@ -151,7 +157,17 @@ const Dashboard = ({ onLogout }) => {
                                     <input
                                         type="file"
                                         multiple
-                                        onChange={handleFileUpload}
+                                        onChange={(e) => {
+                                            const selectedFiles = Array.from(e.target.files).map((file) => ({
+                                                id: Date.now() + Math.random(),
+                                                name: file.name,
+                                                type: file.type,
+                                                folderId: currentFolder?.id || null,
+                                                thumbnail: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+                                                uploadTime: new Date().toISOString(),
+                                            }));
+                                            setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+                                        }}
                                         style={{ display: 'none' }}
                                         id="file-upload"
                                     />
@@ -166,22 +182,40 @@ const Dashboard = ({ onLogout }) => {
 
                     {/* Folder and File List */}
                     <Grid container spacing={1}>
+                        {/* Folder Drop Area */}
+                        <Grid item xs={12}>
+                            <div
+                                {...getRootProps()}
+                                style={{
+                                    border: '2px dashed #244391',
+                                    padding: '20px',
+                                    textAlign: 'center',
+                                    cursor: 'pointer',
+                                    marginBottom: '20px',
+                                }}
+                            >
+                                <input {...getInputProps()} />
+                                <Typography variant="body1">
+                                    Drag and drop files here, or click to select files
+                                </Typography>
+                            </div>
+                        </Grid>
+
                         {currentFolders.map((folder) => (
                             <Grid item xs={2} key={folder.id}>
                                 <Card onClick={() => handleOpenFolder(folder)} style={{ cursor: 'pointer', height: '100%' }}>
                                     <CardContent style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                        <FolderIcon sx={{ fontSize: '100px', color:"#244391" }} />
+                                        <FolderIcon sx={{ fontSize: '100px', color: "#244391" }} />
                                         <Typography variant="body2" noWrap style={{ marginBottom: '8px' }}>
                                             {folder.name}
                                         </Typography>
-                                      
                                     </CardContent>
                                 </Card>
                             </Grid>
                         ))}
 
                         {currentFiles.map((file) => (
-                            <Grid item xs={3} key={file.id}>
+                            <Grid item xs={2} key={file.id}>
                                 <Card style={{ height: '100%', position: 'relative' }}>
                                     <CardContent style={{ height: '100%' }}>
                                         {/* Thumbnail and file preview */}
@@ -203,13 +237,13 @@ const Dashboard = ({ onLogout }) => {
                                         </Box>
 
                                         {/* File name */}
-                                        <Typography variant="body2" noWrap>
-                                            {file.name}
+                                        <Typography variant="body2" noWrap title={file.name}>
+                                            {file.name.slice(0, 15) + "..."}
                                         </Typography>
 
                                         {/* File upload time */}
                                         <Typography variant="caption">
-                                            {file.uploadTime ? moment(file.uploadTime).format('MMMM Do YYYY, h:mm:ss a') : 'No upload time'}
+                                            {file.uploadTime ? moment(file.uploadTime).format('MMMM Do YYYY') : 'No upload time'}
                                         </Typography>
 
                                         {/* Download icon at the bottom-right */}
@@ -229,38 +263,30 @@ const Dashboard = ({ onLogout }) => {
                                 </Card>
                             </Grid>
                         ))}
-
                     </Grid>
-
-                    {/* Create Folder Dialog */}
-                    <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="xs">
-                        <DialogTitle>Create New Folder</DialogTitle>
-                        <Divider />
-                        <DialogContent>
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                label="Folder Name"
-                                fullWidth
-                                value={folderName}
-                                onChange={(e) => setFolderName(e.target.value)}
-                            />
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => setDialogOpen(false)} variant="outlined">
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleCreateFolder}
-                                color="primary"
-                                variant="contained"
-                                sx={{ backgroundColor: "#244391" }}
-                            >
-                                Create
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
                 </Box>
+
+                {/* Folder Creation Dialog */}
+                <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="xs">
+                    <DialogTitle>Create Folder</DialogTitle>
+                    <Divider/>
+                    <DialogContent>
+                        <TextField
+                            autoFocus
+                            fullWidth
+                            label="Folder Name"
+                            variant="outlined"
+                            value={folderName}
+                            onChange={(e) => setFolderName(e.target.value)}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setDialogOpen(false)} color="primary" variant='outlined' >Cancel</Button>
+                        <Button onClick={handleCreateFolder} color="primary"   variant='contained' sx={{
+                            backgroundColor: "#244391"
+                        }}>Create</Button>
+                    </DialogActions>
+                </Dialog>
             </div>
         </div>
     );
