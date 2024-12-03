@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Paper } from '@mui/material';
+import { Box, TextField, Button, Typography, Paper, useMediaQuery } from '@mui/material';
 import Logo from '../../assets/logo.png';
 
 const Login = ({ onLogin }) => {
+    // Breakpoints for responsiveness
+    const isMobileSmall = useMediaQuery("(max-width: 479px)");
+    const isMobileLarge = useMediaQuery("(min-width: 480px) and (max-width: 767px)");
+    const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1199px)");
+    const isDesktop = useMediaQuery("(min-width: 1200px)");
     const [credentials, setCredentials] = useState({ username: '', password: '' });
 
     const handleChange = (e) => {
@@ -32,6 +37,7 @@ const Login = ({ onLogin }) => {
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
+                padding: isMobileSmall || isMobileLarge ? 2 : 4,
             }}
         >
             {/* Dull Overlay */}
@@ -49,8 +55,14 @@ const Login = ({ onLogin }) => {
             <Paper
                 elevation={4}
                 sx={{
-                    padding: 4,
-                    width: 400,
+                    padding: isMobileSmall ? 2 : 4,
+                    width: isMobileSmall
+                        ? '90%'
+                        : isMobileLarge
+                            ? '80%'
+                            : isTablet
+                                ? '60%'
+                                : '400px',
                     textAlign: 'center',
                     borderRadius: 2,
                     zIndex: 1, // Ensures the form stays above the overlay
@@ -60,15 +72,20 @@ const Login = ({ onLogin }) => {
                     src={Logo}
                     alt="Logo"
                     style={{
-                        width: '200px',
+                        width: isMobileSmall ? '150px' : '200px',
                         margin: '0 auto',
-                        marginBottom: 16,
+                        marginBottom: isMobileSmall ? 8 : 16,
                     }}
                 />
-                <Typography variant="h5" gutterBottom>
+                <Typography variant={isMobileSmall ? 'h6' : 'h5'} gutterBottom>
                     Welcome Back
                 </Typography>
-                <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+                <Typography
+                    variant="subtitle1"
+                    color="textSecondary"
+                    gutterBottom
+                    sx={{ fontSize: isMobileSmall ? '0.9rem' : '1rem' }}
+                >
                     Please log in to your account
                 </Typography>
                 <form onSubmit={handleSubmit}>
@@ -97,13 +114,15 @@ const Login = ({ onLogin }) => {
                         <Button
                             type="submit"
                             variant="contained"
-                            color="primary"
                             fullWidth
                             sx={{
                                 padding: 1,
                                 fontSize: '16px',
-                                backgroundColor: "#d0242c",
-                                color: "#FFF",
+                                backgroundColor: '#d0242c',
+                                color: '#FFF',
+                                '&:hover': {
+                                    backgroundColor: '#b01e25',
+                                },
                             }}
                         >
                             Login
